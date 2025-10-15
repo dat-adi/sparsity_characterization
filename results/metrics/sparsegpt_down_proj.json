@@ -1,0 +1,252 @@
+{
+  "matrix_path": "clustering_characterization/sparsegpt/layer1-mlp.down_proj.pt",
+  "matrix_name": "layer1-mlp.down_proj",
+  "matrix_shape": [
+    4096,
+    11008
+  ],
+  "n_executions": 10,
+  "n_features": 128,
+  "n_clusters": 8,
+  "aggregated_metrics": {
+    "n_executions": 10,
+    "hamming_min_mean": 1764.0,
+    "hamming_min_std": 201.93464289219915,
+    "hamming_max_mean": 1887.7,
+    "hamming_max_std": 113.43636982908083,
+    "hamming_range_mean": 123.7,
+    "hamming_range_std": 90.58923777138209,
+    "mean_within_cluster_mean": 28.540064039620773,
+    "mean_within_cluster_std": 2.332571006691815,
+    "mean_between_cluster_mean": 26.235083007671328,
+    "mean_between_cluster_std": 6.974344345386597,
+    "separation_ratio_mean": 0.9432580682544446,
+    "separation_ratio_std": 0.3210345635324472,
+    "total_inertia_mean": 108160.72584095996,
+    "total_inertia_std": 15267.144105361915,
+    "cluster_balance_mean": 22.011578526846854,
+    "cluster_balance_std": 8.159337335620743
+  },
+  "individual_metrics": [
+    {
+      "main_feature_idx": 7270,
+      "hamming_min": 1865,
+      "hamming_max": 1948,
+      "hamming_mean": 1937.390625,
+      "hamming_std": 12.216941602110365,
+      "mean_within_cluster": 29.90578820502835,
+      "mean_between_cluster": 24.593326479827073,
+      "separation_ratio": 0.8223600833129674,
+      "total_inertia": 117438.10530303027,
+      "cluster_sizes": [
+        28,
+        8,
+        12,
+        2,
+        22,
+        1,
+        55,
+        1
+      ],
+      "cluster_balance_std": 17.417214903652077
+    },
+    {
+      "main_feature_idx": 860,
+      "hamming_min": 1504,
+      "hamming_max": 1739,
+      "hamming_mean": 1689.1953125,
+      "hamming_std": 41.51544490340124,
+      "mean_within_cluster": 25.004750960089343,
+      "mean_between_cluster": 34.1067220043568,
+      "separation_ratio": 1.3640096659548948,
+      "total_inertia": 84965.39206349208,
+      "cluster_sizes": [
+        1,
+        105,
+        1,
+        1,
+        1,
+        18,
+        1,
+        1
+      ],
+      "cluster_balance_std": 34.04936673419933
+    },
+    {
+      "main_feature_idx": 5390,
+      "hamming_min": 1936,
+      "hamming_max": 1974,
+      "hamming_mean": 1962.625,
+      "hamming_std": 9.916053902636875,
+      "mean_within_cluster": 30.264800666805755,
+      "mean_between_cluster": 28.925059430027062,
+      "separation_ratio": 0.9557326925252769,
+      "total_inertia": 120484.5662994696,
+      "cluster_sizes": [
+        1,
+        57,
+        43,
+        20,
+        3,
+        2,
+        1,
+        2
+      ],
+      "cluster_balance_std": 20.72702040815322
+    },
+    {
+      "main_feature_idx": 5191,
+      "hamming_min": 1897,
+      "hamming_max": 1957,
+      "hamming_mean": 1944.0,
+      "hamming_std": 12.148173731059332,
+      "mean_within_cluster": 30.030382023051153,
+      "mean_between_cluster": 19.88139924299058,
+      "separation_ratio": 0.662042834744151,
+      "total_inertia": 117423.03651199609,
+      "cluster_sizes": [
+        17,
+        46,
+        1,
+        23,
+        5,
+        3,
+        14,
+        20
+      ],
+      "cluster_balance_std": 13.623853162743645
+    },
+    {
+      "main_feature_idx": 5734,
+      "hamming_min": 1932,
+      "hamming_max": 1974,
+      "hamming_mean": 1963.28125,
+      "hamming_std": 9.14461718375898,
+      "mean_within_cluster": 30.65497337972838,
+      "mean_between_cluster": 17.051830504013346,
+      "separation_ratio": 0.5562500509391874,
+      "total_inertia": 121438.86034441748,
+      "cluster_sizes": [
+        3,
+        33,
+        13,
+        5,
+        10,
+        49,
+        5,
+        11
+      ],
+      "cluster_balance_std": 15.243338709088636
+    },
+    {
+      "main_feature_idx": 6265,
+      "hamming_min": 1340,
+      "hamming_max": 1643,
+      "hamming_mean": 1581.8046875,
+      "hamming_std": 56.822373811090856,
+      "mean_within_cluster": 24.94903641545708,
+      "mean_between_cluster": 34.47844620362018,
+      "separation_ratio": 1.3819550234116131,
+      "total_inertia": 84602.5292397661,
+      "cluster_sizes": [
+        9,
+        1,
+        1,
+        114,
+        1,
+        1,
+        1,
+        1
+      ],
+      "cluster_balance_std": 37.08583793040141
+    },
+    {
+      "main_feature_idx": 466,
+      "hamming_min": 1713,
+      "hamming_max": 1901,
+      "hamming_mean": 1876.046875,
+      "hamming_std": 26.470460946768096,
+      "mean_within_cluster": 29.238686066940524,
+      "mean_between_cluster": 24.746238151211337,
+      "separation_ratio": 0.8463526060834625,
+      "total_inertia": 112234.77568922305,
+      "cluster_sizes": [
+        1,
+        57,
+        3,
+        6,
+        6,
+        48,
+        7,
+        1
+      ],
+      "cluster_balance_std": 21.227561682868807
+    },
+    {
+      "main_feature_idx": 4426,
+      "hamming_min": 1918,
+      "hamming_max": 1969,
+      "hamming_mean": 1957.7578125,
+      "hamming_std": 9.708844303769824,
+      "mean_within_cluster": 29.644222932887885,
+      "mean_between_cluster": 29.80143333873053,
+      "separation_ratio": 1.005303239224673,
+      "total_inertia": 116422.46324075157,
+      "cluster_sizes": [
+        3,
+        3,
+        21,
+        1,
+        53,
+        46,
+        1,
+        1
+      ],
+      "cluster_balance_std": 20.331241354132807
+    },
+    {
+      "main_feature_idx": 5578,
+      "hamming_min": 1923,
+      "hamming_max": 1977,
+      "hamming_mean": 1965.9609375,
+      "hamming_std": 10.097495314239753,
+      "mean_within_cluster": 30.57728293104351,
+      "mean_between_cluster": 14.381393947641518,
+      "separation_ratio": 0.47032936118208346,
+      "total_inertia": 120700.87925305692,
+      "cluster_sizes": [
+        11,
+        44,
+        9,
+        22,
+        8,
+        8,
+        8,
+        19
+      ],
+      "cluster_balance_std": 11.698691166109139
+    },
+    {
+      "main_feature_idx": 8322,
+      "hamming_min": 1612,
+      "hamming_max": 1795,
+      "hamming_mean": 1756.046875,
+      "hamming_std": 35.527907027214184,
+      "mean_within_cluster": 25.13071681517575,
+      "mean_between_cluster": 34.38498077429487,
+      "separation_ratio": 1.3682451251661363,
+      "total_inertia": 85896.65046439628,
+      "cluster_sizes": [
+        85,
+        1,
+        1,
+        1,
+        1,
+        38,
+        1,
+        1
+      ],
+      "cluster_balance_std": 28.711659217119447
+    }
+  ]
+}
