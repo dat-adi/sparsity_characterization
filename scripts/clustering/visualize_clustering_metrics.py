@@ -9,6 +9,7 @@ Creates PNG plots showing:
 4. Hamming distance distributions for selected features
 """
 
+import sys
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,12 +18,12 @@ from pathlib import Path
 from typing import Dict, List
 import json
 
-# Import functions from the analysis script
-from feature_clustering_analysis import (
-    analyze_matrix,
-    find_most_similar_features,
-    compute_cluster_metrics
-)
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from utils.hamming_analysis import find_most_similar_features
+from utils.clustering import compute_cluster_metrics
+from feature_clustering_analysis import analyze_matrix
 
 # Set style
 sns.set_style("whitegrid")

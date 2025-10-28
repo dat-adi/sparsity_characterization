@@ -9,182 +9,20 @@ For each sparse matrix (down_proj, up_proj, gate_proj, etc.):
 4. Measure mean hamming distance within and between clusters
 """
 
+import sys
 import torch
 import numpy as np
-from sklearn.cluster import KMeans
-from pathlib import Path
-from dataclasses import dataclass
-from typing import Dict, List, Tuple
 import random
+from pathlib import Path
+from typing import Dict, List
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from utils.hamming_analysis import find_most_similar_features
+from utils.clustering import compute_cluster_metrics, ClusterMetrics
 
 
-@dataclass
-class ClusterMetrics:
-    """Stores clustering metrics for a given k value"""
-    k: int
-    within_cluster_distances: List[float]  # Mean hamming distance within each cluster
-    between_cluster_distances: np.ndarray  # Pairwise mean hamming distances between clusters
-    mean_within: float
-    mean_between: float
-    cluster_sizes: List[int]
-
-
-def compute_hamming_distance(vec1: torch.Tensor, vec2: torch.Tensor) -> float:
-    """
-    Compute hamming distance between two binary vectors.
-
-    Args:
-        vec1, vec2: Binary tensors (values are 0 or non-zero)
-
-    Returns:
-        Hamming distance as fraction of differing positions
-    """
-    binary1 = (vec1 != 0).int()
-    binary2 = (vec2 != 0).int()
-    return (binary1 != binary2).float().mean().item()
-
-
-def compute_hamming_distance_batch(vec: torch.Tensor, matrix: torch.Tensor) -> torch.Tensor:
-    """
-    Compute hamming distances between one vector and all columns of a matrix.
-
-    Args:
-        vec: Single feature vector [D]
-        matrix: Matrix with features as columns [D, N]
-
-    Returns:
-        Tensor of hamming distances [N]
-    """
-    binary_vec = (vec != 0).int().unsqueeze(1)  # [D, 1]
-    binary_matrix = (matrix != 0).int()  # [D, N]
-    distances = (binary_vec != binary_matrix).float().mean(dim=0)  # [N]
-    return distances
-
-
-def find_most_similar_features(
-    matrix: torch.Tensor,
-    feature_idx: int,
-    n_similar: int = 128
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """
-    Find the n_similar most similar feature vectors to a given feature.
-
-    Args:
-        matrix: Weight matrix [D, N] where N is number of features
-        feature_idx: Index of the reference feature
-        n_similar: Number of similar features to find (including the reference)
-
-    Returns:
-        subset: Matrix of selected features [D, n_similar]
-        indices: Indices of selected features [n_similar]
-        distances: Hamming distances of selected features [n_similar]
-    """
-    reference_vec = matrix[:, feature_idx]
-
-    # Compute hamming distances to all features
-    distances = compute_hamming_distance_batch(reference_vec, matrix)
-
-    # Get indices of n_similar closest features
-    # Note: index 0 will be the reference itself (distance = 0)
-    sorted_indices = torch.argsort(distances)
-    top_indices = sorted_indices[:n_similar]
-
-    subset = matrix[:, top_indices]
-    selected_distances = distances[top_indices]
-
-    return subset, top_indices, selected_distances
-
-
-def compute_cluster_metrics(
-    features: torch.Tensor,
-    k: int,
-    random_state: int = 42
-) -> ClusterMetrics:
-    """
-    Perform KMeans clustering and compute within/between cluster hamming distances.
-
-    Args:
-        features: Feature matrix [D, N] where N is number of features
-        k: Number of clusters
-        random_state: Random seed for KMeans
-
-    Returns:
-        ClusterMetrics object with all computed metrics
-    """
-    # Transpose so each row is a feature vector for KMeans
-    features_T = features.T.cpu().numpy()  # [N, D]
-
-    # Apply KMeans
-    kmeans = KMeans(n_clusters=k, random_state=random_state, n_init=10)
-    labels = kmeans.fit_predict(features_T)
-
-    # Convert back to torch for hamming distance computation
-    features_tensor = features.cpu()
-
-    # Compute within-cluster distances
-    within_cluster_distances = []
-    cluster_sizes = []
-
-    for cluster_id in range(k):
-        cluster_mask = (labels == cluster_id)
-        cluster_features = features_tensor[:, cluster_mask]  # [D, n_cluster]
-        cluster_sizes.append(cluster_features.shape[1])
-
-        if cluster_features.shape[1] <= 1:
-            within_cluster_distances.append(0.0)
-            continue
-
-        # Compute pairwise hamming distances within cluster
-        n_features = cluster_features.shape[1]
-        distances = []
-        for i in range(n_features):
-            for j in range(i + 1, n_features):
-                dist = compute_hamming_distance(
-                    cluster_features[:, i],
-                    cluster_features[:, j]
-                )
-                distances.append(dist)
-
-        mean_dist = np.mean(distances) if distances else 0.0
-        within_cluster_distances.append(mean_dist)
-
-    # Compute between-cluster distances
-    between_cluster_distances = np.zeros((k, k))
-
-    for i in range(k):
-        for j in range(i + 1, k):
-            cluster_i_mask = (labels == i)
-            cluster_j_mask = (labels == j)
-
-            cluster_i_features = features_tensor[:, cluster_i_mask]
-            cluster_j_features = features_tensor[:, cluster_j_mask]
-
-            # Sample pairs to avoid O(n^2) computation for large clusters
-            n_samples = min(50, cluster_i_features.shape[1] * cluster_j_features.shape[1])
-            distances = []
-
-            for _ in range(n_samples):
-                idx_i = random.randint(0, cluster_i_features.shape[1] - 1)
-                idx_j = random.randint(0, cluster_j_features.shape[1] - 1)
-
-                dist = compute_hamming_distance(
-                    cluster_i_features[:, idx_i],
-                    cluster_j_features[:, idx_j]
-                )
-                distances.append(dist)
-
-            mean_dist = np.mean(distances)
-            between_cluster_distances[i, j] = mean_dist
-            between_cluster_distances[j, i] = mean_dist
-
-    return ClusterMetrics(
-        k=k,
-        within_cluster_distances=within_cluster_distances,
-        between_cluster_distances=between_cluster_distances,
-        mean_within=np.mean(within_cluster_distances),
-        mean_between=np.mean(between_cluster_distances[np.triu_indices(k, k=1)]),
-        cluster_sizes=cluster_sizes
-    )
 
 
 def analyze_matrix(

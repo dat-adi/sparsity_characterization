@@ -1,7 +1,12 @@
 import torch
 from pathlib import Path
 from rich import print
-import numpy as np
+import sys
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from utils.similarity_metrics import compute_metrics_by_feature
 
 file_paths = {
     "wanda": [
@@ -23,51 +28,6 @@ file_paths = {
         "/home/datadi/burns/aws/workloads/data/ablations/sparsity_layer_1_unstructured_sparsegpt/layer0-self_attn.v_proj-0-0-0.5.pt"
     ]
 }
-
-def jaccard_similarity(a, b):
-    a_nz = (a != 0).flatten()
-    b_nz = (b != 0).flatten()
-    intersection = torch.sum(a_nz & b_nz).item()
-    union = torch.sum(a_nz | b_nz).item()
-    return intersection / union if union > 0 else 0
-
-def cosine_similarity(a, b):
-    a_flat = a.flatten().float()
-    b_flat = b.flatten().float()
-    dot = torch.dot(a_flat, b_flat)
-    norm_a = torch.norm(a_flat)
-    norm_b = torch.norm(b_flat)
-    return (dot / (norm_a * norm_b)).item() if norm_a > 0 and norm_b > 0 else 0
-
-def hamming_distance(a, b):
-    a_nz = (a != 0).flatten()
-    b_nz = (b != 0).flatten()
-    return torch.sum(a_nz != b_nz).item() / len(a_nz)
-
-def compute_metrics_by_feature(mat1, mat2, matrix_name):
-    is_down_proj = "down_proj" in matrix_name
-    axis = 0 if is_down_proj else 1  # row-wise for down_proj, column-wise for others
-    
-    jaccard_scores = []
-    cosine_scores = []
-    hamming_scores = []
-    
-    if axis == 0:  # row-wise
-        for i in range(mat1.shape[0]):
-            jaccard_scores.append(jaccard_similarity(mat1[i], mat2[i]))
-            cosine_scores.append(cosine_similarity(mat1[i], mat2[i]))
-            hamming_scores.append(hamming_distance(mat1[i], mat2[i]))
-    else:  # column-wise
-        for i in range(mat1.shape[1]):
-            jaccard_scores.append(jaccard_similarity(mat1[:, i], mat2[:, i]))
-            cosine_scores.append(cosine_similarity(mat1[:, i], mat2[:, i]))
-            hamming_scores.append(hamming_distance(mat1[:, i], mat2[:, i]))
-    
-    return {
-        'jaccard': {'mean': np.mean(jaccard_scores), 'std': np.std(jaccard_scores)},
-        'cosine': {'mean': np.mean(cosine_scores), 'std': np.std(cosine_scores)},
-        'hamming': {'mean': np.mean(hamming_scores), 'std': np.std(hamming_scores)}
-    }
 
 def comparison_between_wanda_and_sparsegpt_unstructured(file_paths):
     matrix_count = len(file_paths["wanda"])

@@ -1,26 +1,95 @@
 # Analysis Scripts
 
-This directory contains scripts for analyzing sparsity patterns and feature clustering in pruned neural network weights.
+Advanced analysis tools for multi-seed experiments and detailed feature clustering in pruned neural network weights.
 
 ## Directory Structure
 
 ```
-analysis_scripts/
-├── hamming_cluster_analysis.py          # Single-execution analysis
-├── multi_execution_hamming_analysis.py  # Multi-execution statistical analysis
-├── generate_comparative_report.py       # Comparative report generator
-└── README.md                            # This file
-
-../analysis_results/                     # Output directory for JSON results
-├── wanda_down_proj.json
-├── wanda_up_proj.json
-├── sparsegpt_down_proj.json
-└── sparsegpt_up_proj.json
+analysis/
+├── hamming_cluster_analysis.py             # Single-execution analysis
+├── multi_execution_hamming_analysis.py     # Multi-execution statistical analysis
+├── multi_seed_clustering_analysis.py       # NEW: Multi-seed clustering analysis
+├── generate_comparative_report.py          # Comparative report generator
+└── README.md                               # This file
 ```
 
 ## Scripts Overview
 
-### 1. `hamming_cluster_analysis.py`
+### 1. `multi_seed_clustering_analysis.py` ⭐ NEW
+
+**Comprehensive multi-seed clustering analysis with extensive visualizations.**
+
+Performs clustering analysis across multiple random seeds to understand the stability and structure of feature co-activation in sparse weight matrices.
+
+For each random seed:
+1. Randomly selects a feature from the weight matrix
+2. Finds the top N most similar features (by Hamming distance)
+3. Performs k-means clustering with multiple k values
+4. Computes cluster metrics (within/between distances, separation ratios)
+5. Creates comprehensive visualizations
+
+**Usage:**
+```bash
+# Basic usage
+python scripts/analysis/multi_seed_clustering_analysis.py \
+    --method wanda \
+    --layer 1 \
+    --component mlp.down_proj
+
+# Full configuration
+python scripts/analysis/multi_seed_clustering_analysis.py \
+    --method wanda \
+    --layer 1 \
+    --component self_attn.q_proj \
+    --seeds 10 \
+    --n-similar 128 \
+    --k-values 4 8 16
+```
+
+**Arguments:**
+- `--method`: Pruning method (`wanda` or `sparsegpt`) **[required]**
+- `--layer`: Layer number to analyze (default: 1)
+- `--component`: Component name (e.g., `mlp.down_proj`, `self_attn.q_proj`) **[required]**
+- `--seeds`: Number of random seeds to test (default: 10)
+- `--n-similar`: Number of similar features to analyze (default: 128)
+- `--k-values`: K values for clustering (default: 4 8 16)
+- `--output-dir`: Custom output directory (optional)
+
+**Output Structure:**
+```
+results/metrics/multi_seed_clustering/{method}/{component}/
+├── seed_0/k_4/
+│   ├── seed0_k4_feat{N}_spy_plot.png          # Sparsity patterns with cluster boundaries
+│   ├── seed0_k4_feat{N}_statistics.png        # Cluster sizes and cohesion
+│   ├── seed0_k4_feat{N}_tsne.png              # t-SNE 2D embedding
+│   └── seed0_k4_feat{N}_distance_heatmap.png  # Within/between distance matrix
+├── seed_0/k_8/...
+├── seed_1/...
+└── summary/
+    ├── summary_separation_ratios.png  # Separation ratios across k values
+    ├── summary_distances.png          # Within/between distance trends
+    └── metrics_summary.json           # All metrics in JSON format
+```
+
+**Visualizations Generated:**
+- **Per-seed, per-k**: Spy plot, cluster statistics, t-SNE, distance heatmap
+- **Summary**: Separation ratios (mean ± std across seeds), distance trends
+
+**Metrics Computed:**
+- Within-cluster distance: Mean Hamming distance within same cluster
+- Between-cluster distance: Mean Hamming distance between different clusters
+- Separation ratio: Between/within distance ratio (higher = better separation)
+- Cluster sizes, inertia, convergence info
+
+**Use Cases:**
+- Feature co-activation analysis
+- MMM optimization potential assessment
+- Method comparison (Wanda vs SparseGPT)
+- Robustness testing across random seeds
+
+---
+
+### 2. `hamming_cluster_analysis.py`
 Single-execution analysis that:
 - Selects a feature vector from a weight matrix
 - Finds top 128 most similar features by Hamming distance
@@ -45,7 +114,7 @@ python analysis_scripts/hamming_cluster_analysis.py \
 - `--n-clusters`: Number of k-means clusters (default: 8)
 - `--seed`: Random seed for reproducibility (default: 42)
 
-### 2. `multi_execution_hamming_analysis.py`
+### 3. `multi_execution_hamming_analysis.py`
 Multi-execution statistical analysis that:
 - Runs clustering analysis over N random feature selections
 - Aggregates statistics (mean ± std) across executions
@@ -70,7 +139,7 @@ python analysis_scripts/multi_execution_hamming_analysis.py \
 - `--seed`: Random seed for reproducibility (default: 42)
 - `--output-json`: Path to save JSON output (optional)
 
-### 3. `generate_comparative_report.py`
+### 4. `generate_comparative_report.py`
 Generates comparative analysis across multiple matrices:
 - Loads all JSON results from a directory
 - Creates comparative table with key metrics

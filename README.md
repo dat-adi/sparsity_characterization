@@ -53,6 +53,12 @@ This project investigates how different neural network pruning techniques affect
 │   └── metrics/                   # Computed metrics (JSON files)
 │
 ├── scripts/                       # Analysis scripts
+│   ├── utils/                     # Shared utility modules
+│   │   ├── __init__.py
+│   │   ├── similarity_metrics.py  # Jaccard, cosine, Hamming distance
+│   │   ├── hamming_analysis.py    # Feature similarity by Hamming distance
+│   │   ├── clustering.py          # K-means clustering utilities
+│   │   └── visualization.py       # Common plotting functions
 │   ├── visualization/             # Sparsity visualization tools
 │   │   ├── visualize_sparsity.py
 │   │   ├── draw_visualization.py
@@ -344,14 +350,45 @@ Tuning parameters:
 - `num_warps`: Number of GPU warps per threadblock
 - `SPARSITY_BIN`: Cache key for different sparsity levels
 
+## Shared Utilities
+
+The `scripts/utils/` directory contains reusable functionality:
+
+### similarity_metrics.py
+- `jaccard_similarity(a, b)`: Measures overlap of non-zero positions
+- `cosine_similarity(a, b)`: Directional similarity of weight values
+- `hamming_distance(a, b)`: Proportion of differing sparsity patterns
+- `compute_metrics_by_feature(mat1, mat2, name)`: Feature-wise metrics
+
+### hamming_analysis.py
+- `compute_hamming_distance(vec1, vec2)`: Binary vector distance
+- `compute_hamming_distance_batch(vec, matrix)`: Vectorized computation
+- `find_most_similar_features(matrix, idx, n)`: Find n nearest neighbors
+- `get_coactivation_gradient(matrix)`: Order by Hamming distance
+- `create_feature_subset(idx, n, matrix)`: Random feature sampling
+
+### clustering.py
+- `ClusterMetrics`: Dataclass for clustering results
+- `compute_cluster_metrics(features, k)`: K-means with distance metrics
+- `compute_absolute_cluster_distances(data, labels, centers)`: Distance to centers
+- `compute_block_coherence(data, labels, block_size)`: MMM optimization potential
+
+### visualization.py
+- `create_spy_visualization(matrix, title, path)`: Binary sparsity plots
+- `create_clustered_spy_plot(data, labels, title)`: Cluster-ordered plots
+- `plot_cluster_statistics(sizes, distances, k)`: Cluster analysis
+- `plot_separation_ratio(k_values, ratios, title)`: Cluster quality
+
 ## Contributing
 
 When adding new analysis scripts:
 1. Place visualization scripts in `scripts/visualization/`
 2. Place clustering analysis in `scripts/clustering/`
 3. Place method comparisons in `scripts/metrics/`
-4. Update paths to use relative references from script location
-5. Save outputs to `results/visualizations/` or `results/metrics/`
+4. **Import shared utilities from `scripts/utils/`** instead of duplicating code
+5. Use `sys.path.insert(0, str(Path(__file__).parent.parent))` to import utils
+6. Update paths to use relative references from script location
+7. Save outputs to `results/visualizations/` or `results/metrics/`
 
 ## License
 
