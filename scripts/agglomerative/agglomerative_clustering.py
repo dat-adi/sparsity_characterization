@@ -1,5 +1,5 @@
 """
-Hierarchical Agglomerative Clustering with Random Sampling
+Hierarchical Agglomerative Clustering with Mean-Based Representative Selection
 
 This script performs hierarchical agglomerative clustering on neural network weight matrices
 using the following algorithm:
@@ -7,7 +7,7 @@ using the following algorithm:
 Algorithm Steps:
 1. Sample N seed features: Randomly select N non-zero feature vectors (columns) from the matrix
 2. Create initial groups: For each seed, find G most similar features → N groups of G features
-3. Random sampling within groups: From each group of G, randomly sample 1 representative
+3. Mean-based representative selection: From each group of G, select the feature closest to the cluster mean
 4. Recursive clustering: Repeat grouping and sampling until convergence:
    - Number of levels is automatically calculated based on N and G
    - Each level reduces features by a factor of G
@@ -42,7 +42,7 @@ from utils.hamming_analysis import find_most_similar_features
 # ============================================================================
 # CONFIGURATION - Modify these values to change clustering parameters
 # ============================================================================
-N_SEED_FEATURES = 128  # Number of seed features to sample
+N_SEED_FEATURES = 1024  # Number of seed features to sample
 GROUP_SIZE = 8         # Size of groups at each level (features per group)
 RANDOM_SEED = 42       # Random seed for reproducibility
 
@@ -59,6 +59,42 @@ print(f"Initial features (Level 0): {INITIAL_FEATURES} ({N_SEED_FEATURES} × {GR
 print(f"Maximum levels: {MAX_LEVELS}")
 print(f"Random seed: {RANDOM_SEED}")
 print(f"{'='*80}\n")
+
+def find_closest_to_mean(matrix, indices):
+    """
+    Find the feature that is closest to the mean of the cluster.
+
+    Args:
+        matrix: Full feature matrix (neurons x features)
+        indices: List of feature indices in the cluster
+
+    Returns:
+        Index of the feature closest to the cluster mean
+    """
+    if len(indices) == 1:
+        return indices[0]
+
+    # Get the features for this cluster
+    cluster_features = matrix[:, indices]
+
+    # Compute the mean feature vector (mean across features dimension)
+    mean_vector = cluster_features.float().mean(dim=1)
+
+    # Find the feature with minimum distance to the mean
+    min_dist = float('inf')
+    closest_idx = indices[0]
+
+    for idx in indices:
+        feat_vec = matrix[:, idx].float()
+        # Use L2 distance to the mean
+        dist = torch.norm(feat_vec - mean_vector).item()
+
+        if dist < min_dist:
+            min_dist = dist
+            closest_idx = idx
+
+    return closest_idx
+
 
 def sample_nonzero_features(matrix, n_sample=128, samples_per_feature=8):
     """
@@ -138,8 +174,8 @@ def agglomerative_cluster_step(matrix, current_indices, group_size=8):
 
     # If we have fewer features than group_size, just return them all
     if n_features <= group_size:
-        # Single group, sample one representative
-        rep = random.choice(current_indices)
+        # Single group, find representative closest to mean
+        rep = find_closest_to_mean(matrix, current_indices)
         cluster = {
             'members': current_indices,
             'mean_distance': 0.0,
@@ -206,8 +242,8 @@ def agglomerative_cluster_step(matrix, current_indices, group_size=8):
             'seed': seed
         })
 
-        # Sample one representative
-        rep = random.choice(members)
+        # Find representative closest to cluster mean
+        rep = find_closest_to_mean(matrix, members)
         next_indices.append(rep)
 
     return next_indices, clusters
@@ -242,6 +278,7 @@ def recursive_agglomerative_clustering(matrix, initial_groups, group_size=8, max
 
     for group in initial_groups:
         if len(group) <= 0:
+            continue
 
         # Compute intra-group distance
         mean_distance = 0.0
@@ -256,8 +293,8 @@ def recursive_agglomerative_clustering(matrix, initial_groups, group_size=8, max
                     distances.append(hamming_dist)
             mean_distance = np.mean(distances) if distances else 0.0
 
-        # Random sample one representative
-        rep = random.choice(group)
+        # Find representative closest to cluster mean
+        rep = find_closest_to_mean(matrix, group)
         current_representatives.append(rep)
 
         level0_clusters.append({

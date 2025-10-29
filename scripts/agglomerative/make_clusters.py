@@ -10,6 +10,42 @@ from utils.custom import get_unstructured_matrices, set_seed
 from utils.hamming_analysis import find_most_similar_features
 
 set_seed(42)
+
+
+def find_closest_to_mean(matrix, indices):
+    """
+    Find the feature that is closest to the mean of the cluster.
+
+    Args:
+        matrix: Full feature matrix (neurons x features)
+        indices: List of feature indices in the cluster
+
+    Returns:
+        Index of the feature closest to the cluster mean
+    """
+    if len(indices) == 1:
+        return indices[0]
+
+    # Get the features for this cluster
+    cluster_features = matrix[:, indices]
+
+    # Compute the mean feature vector (mean across features dimension)
+    mean_vector = cluster_features.float().mean(dim=1)
+
+    # Find the feature with minimum distance to the mean
+    min_dist = float('inf')
+    closest_idx = indices[0]
+
+    for idx in indices:
+        feat_vec = matrix[:, idx].float()
+        # Use L2 distance to the mean
+        dist = torch.norm(feat_vec - mean_vector).item()
+
+        if dist < min_dist:
+            min_dist = dist
+            closest_idx = idx
+
+    return closest_idx
 wanda_matrices, sparsegpt_matrices = get_unstructured_matrices()
 
 # Create output directory for visualizations
@@ -19,7 +55,7 @@ output_dir.mkdir(parents=True, exist_ok=True)
 def recursive_agglomerative_clustering(matrix, sampled_indices, n_neighbors=8):
     """
     Recursively group features by finding n most similar neighbors,
-    allowing overlapping clusters, then randomly sample from each group and repeat.
+    allowing overlapping clusters, then select the feature closest to cluster mean and repeat.
 
     Args:
         matrix: Full feature matrix (neurons x features)
@@ -75,10 +111,10 @@ def recursive_agglomerative_clustering(matrix, sampled_indices, n_neighbors=8):
             'clusters': clusters
         })
 
-        # Randomly sample one representative from each cluster for next level
+        # Select representative closest to cluster mean for next level
         next_indices = []
         for cluster in clusters:
-            representative = random.choice(cluster['members'])
+            representative = find_closest_to_mean(matrix, cluster['members'])
             next_indices.append(representative)
 
         # Remove duplicates while preserving order
