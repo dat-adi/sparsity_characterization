@@ -66,27 +66,17 @@ cd scripts/kernels && python kernelize.py
 │   └── metrics/                   # Computed metrics (JSON files)
 │
 ├── scripts/                       # Analysis scripts
+│   ├── utils/                     # Shared utility modules
+│   │   ├── __init__.py
+│   │   ├── similarity_metrics.py  # Jaccard, cosine, Hamming distance
+│   │   ├── hamming_analysis.py    # Feature similarity utilities
+│   │   ├── clustering.py          # K-means clustering utilities
+│   │   └── visualization.py       # Common plotting functions
 │   ├── visualization/             # Sparsity visualization tools
-│   │   ├── visualize_sparsity.py
-│   │   ├── draw_visualization.py
-│   │   ├── generate_unstructured_spy_visualizations.py
-│   │   ├── generate_hamming_gradient_spy.py
-│   │   ├── generate_sparsegpt_hamming_128.py
-│   │   └── generate_sparsegpt_k16_spy.py
 │   ├── clustering/                # Feature clustering analysis
-│   │   ├── feature_clustering_analysis.py
-│   │   ├── correlation_analysis.py
-│   │   └── visualize_clustering_metrics.py
 │   ├── metrics/                   # Pruning method comparison
-│   │   ├── metrics_bw_unstructured_wanda_and_sparsegpt.py
-│   │   ├── metrics_bw_structured_wanda_ablations.py
-│   │   └── metrics_bw_structured_sparsegpt_ablations.py
 │   ├── analysis/                  # Advanced analysis tools
-│   │   ├── hamming_cluster_analysis.py
-│   │   ├── multi_execution_hamming_analysis.py
-│   │   └── generate_comparative_report.py
 │   └── kernels/                   # Sparse inference kernels
-│       └── kernelize.py
 │
 ├── notebooks/                     # Interactive Marimo notebooks
 │   └── sparsity_evaluation.py
@@ -165,7 +155,23 @@ Hard-coded thresholds for 90% sparsity (from `scripts/visualization/draw_visuali
 ### Adding New Scripts
 When adding new analysis scripts:
 1. Place them in the appropriate `scripts/` subdirectory
-2. Use relative paths (e.g., `../../data/...`, `../../results/...`)
-3. Save outputs to `results/visualizations/` or `results/metrics/`
-4. Update README.md with usage instructions
-5. Consider whether the script should be run from its directory or the project root
+2. **Import shared utilities from `scripts/utils/`** to avoid code duplication:
+   ```python
+   import sys
+   from pathlib import Path
+   sys.path.insert(0, str(Path(__file__).parent.parent))
+   from utils.similarity_metrics import compute_metrics_by_feature
+   from utils.hamming_analysis import find_most_similar_features
+   from utils.clustering import compute_cluster_metrics
+   from utils.visualization import create_spy_visualization
+   ```
+3. Use relative paths (e.g., `../../data/...`, `../../results/...`)
+4. Save outputs to `results/visualizations/` or `results/metrics/`
+5. Update README.md with usage instructions
+6. Consider whether the script should be run from its directory or the project root
+
+### Shared Utilities (`scripts/utils/`)
+- **similarity_metrics.py**: Jaccard similarity, cosine similarity, Hamming distance, feature-wise metrics
+- **hamming_analysis.py**: Hamming distance computation, feature similarity search, co-activation analysis
+- **clustering.py**: K-means clustering, cluster metrics, block coherence for MMM optimization
+- **visualization.py**: Spy plots, cluster visualizations, separation ratio plots
